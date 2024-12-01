@@ -6,6 +6,7 @@ import (
 	"globe-hop/routes"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -25,6 +26,7 @@ func main() {
 	router := routes.InitializeRouter()
 
 	// Start server
-	log.Printf("Server running on localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	PORT := os.Getenv("PORT_NO")
+	log.Printf("Server running on localhost:%v", PORT)
+	log.Fatal(http.ListenAndServe(":"+PORT, router))
 }

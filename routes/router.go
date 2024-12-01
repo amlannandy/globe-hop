@@ -3,9 +3,9 @@ package routes
 import "github.com/gorilla/mux"
 
 func InitializeRouter() *mux.Router {
-	router := mux.NewRouter();
+	router := mux.NewRouter()
 
-	InitializeUsersRoutes(router);
+	InitializeUsersRoutes(router)
 
-	return router;
+	return router
 }

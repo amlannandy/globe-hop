@@ -10,7 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main()  {
+func main() {
 	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
@@ -18,9 +18,8 @@ func main()  {
 	}
 
 	// Initialize database
-	config.InitDb();
+	config.InitDb()
 	config.AutoMigrate(&models.User{})
-
 
 	// Initialize router
 	router := routes.InitializeRouter()

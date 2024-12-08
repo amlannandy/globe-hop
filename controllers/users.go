@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"globe-hop/config"
 	"globe-hop/models"
+	"globe-hop/types"
 	"globe-hop/utils"
 	"net/http"
 
@@ -87,5 +88,52 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	var body types.LoginRequestBody
 
+	// Decode request
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusBadRequest,
+			Error:  "Invalid request",
+		})
+		return
+	}
+
+	// Check if user exists or not
+	var user *models.User
+	err = config.DB.Where("email = ?", body.Email).First(&user).Error
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusNotFound,
+			Error:  "Account with this email does not exist",
+		})
+		return
+	}
+
+	authResult := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	if authResult != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusUnauthorized,
+			Error:  "Incorrect password",
+		})
+		return
+	}
+
+	// Generate JWT token
+	token, err := config.GenerateJWTToken(user)
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusInternalServerError,
+			Error:  "Error generating token.",
+		})
+		return
+	}
+
+	// Return success response with token
+	utils.SendSuccessResponse(w, &utils.SuccessResponseBody{
+		Status:  http.StatusAccepted,
+		Message: "User logged in successfully.",
+		Data:    token,
+	})
 }

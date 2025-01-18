@@ -7,6 +7,7 @@ import (
 	"globe-hop/types"
 	"globe-hop/utils"
 	"net/http"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
@@ -22,7 +23,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusBadRequest,
-			Error:  "Invalid request",
+			Error:  "Invalid request.",
 		})
 		return
 	}
@@ -42,7 +43,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusInternalServerError,
-			Error:  "Error processing password",
+			Error:  "Error processing password.",
 		})
 		return
 	}
@@ -54,7 +55,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusConflict,
-			Error:  "Email is already registered",
+			Error:  "Email is already registered.",
 		})
 		return
 	}
@@ -64,7 +65,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusInternalServerError,
-			Error:  "Error registering user",
+			Error:  "Error registering user.",
 		})
 		return
 	}
@@ -135,5 +136,37 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Status:  http.StatusAccepted,
 		Message: "User logged in successfully.",
 		Data:    token,
+	})
+}
+
+func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	authHeader := r.Header.Get("Authorization")
+	token := strings.Split(authHeader, " ")[1]
+
+	// Decode token and fetch user
+	userId, err := config.DecodeJWTToken(token)
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusUnauthorized,
+			Error:  "Invalid token.",
+		})
+		return
+	}
+
+	var user *models.User
+	err = config.DB.Where("id = ?", userId).First(&user).Error
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusNotFound,
+			Error:  "User not found.",
+		})
+		return
+	}
+
+	// Return success response with token
+	utils.SendSuccessResponse(w, &utils.SuccessResponseBody{
+		Status:  http.StatusAccepted,
+		Message: "Current user retrieved.",
+		Data:    *user,
 	})
 }

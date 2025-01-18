@@ -17,6 +17,7 @@ type ErrorResponseBody struct {
 }
 
 func SendSuccessResponse(w http.ResponseWriter, data *SuccessResponseBody) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(data.Status)
 	json.NewEncoder(w).Encode(map[string]any{
 		"message": data.Message,
@@ -25,6 +26,7 @@ func SendSuccessResponse(w http.ResponseWriter, data *SuccessResponseBody) {
 }
 
 func SendErrorResponse(w http.ResponseWriter, data *ErrorResponseBody) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(data.Status)
 	json.NewEncoder(w).Encode(map[string]any{
 		"error": data.Error,

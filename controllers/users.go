@@ -15,6 +15,7 @@ import (
 
 var validate = validator.New()
 
+// Register registers a new user with the provided email and password.
 func Register(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 
@@ -88,10 +89,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Login logs in a user with the provided email and password.
 func Login(w http.ResponseWriter, r *http.Request) {
 	var body types.LoginRequestBody
 
-	// Decode request
+	// Decode request body
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
@@ -112,6 +114,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the password is correct
 	authResult := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 	if authResult != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
@@ -139,13 +142,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetCurrentUser retrieves the current user based on the JWT token provided in the request header.
 func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	// Extract the Authorization header from the request
 	authHeader := r.Header.Get("Authorization")
+
+	// Split the header to get the token part
 	token := strings.Split(authHeader, " ")[1]
 
-	// Decode token and fetch user
+	// Decode token and fetch user ID
 	userId, err := config.DecodeJWTToken(token)
 	if err != nil {
+		// Send error response if the token is invalid
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusUnauthorized,
 			Error:  "Invalid token.",
@@ -153,9 +161,11 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Retrieve the user from the database using the extracted user ID
 	var user *models.User
 	err = config.DB.Where("id = ?", userId).First(&user).Error
 	if err != nil {
+		// Send error response if the user is not found
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusNotFound,
 			Error:  "User not found.",
@@ -163,7 +173,7 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return success response with token
+	// Send success response with the current user data
 	utils.SendSuccessResponse(w, &utils.SuccessResponseBody{
 		Status:  http.StatusAccepted,
 		Message: "Current user retrieved.",

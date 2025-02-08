@@ -102,6 +102,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate body
+	err = validate.Struct(body)
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusBadRequest,
+			Error:  config.FormatValidationError(err),
+		})
+		return
+	}
+
 	// Check if user exists or not
 	var user *models.User
 	err = config.DB.Where("email = ?", body.Email).First(&user).Error
@@ -166,6 +176,16 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate body
+	err := validate.Struct(body)
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusBadRequest,
+			Error:  config.FormatValidationError(err),
+		})
+		return
+	}
+
 	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)); err != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
@@ -176,7 +196,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete user from database
-	err := config.DB.Unscoped().Delete(user).Error
+	err = config.DB.Unscoped().Delete(user).Error
 	if err != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusInternalServerError,

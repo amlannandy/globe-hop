@@ -151,3 +151,43 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 		Data:    r.Context().Value("user"),
 	})
 }
+
+// DeleteUser deletes the current user.
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+
+	// Get password from request body
+	var body types.DeleteUserRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusBadRequest,
+			Error:  "Invalid request body",
+		})
+		return
+	}
+
+	// Verify password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)); err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusUnauthorized,
+			Error:  "Incorrect password",
+		})
+		return
+	}
+
+	// Delete user from database
+	err := config.DB.Delete(user).Error
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusInternalServerError,
+			Error:  "Error deleting user.",
+		})
+		return
+	}
+
+	// Return success response
+	utils.SendSuccessResponse(w, &utils.SuccessResponseBody{
+		Status:  http.StatusOK,
+		Message: "User deleted successfully.",
+	})
+}

@@ -5,7 +5,7 @@ type LoginRequestBody struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
-type DeleteUserRequestBody struct {
+type DeleteUserRequestBod struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 

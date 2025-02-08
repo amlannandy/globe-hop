@@ -1,6 +1,6 @@
 # Globe Hop
 
-Globe Hop is a full-stack travel itinerary management platform designed to help users organize trips efficiently. It provides trip management and event handling features, making it easy to plan and track travel experiences.
+Globe Hop is a travel itinerary management platform designed to help users organize trips efficiently. It provides trip management and event handling features, making it easy to plan and track travel experiences.
 
 ## Features
 

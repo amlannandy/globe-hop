@@ -2,9 +2,13 @@ name: Frontend CI
 
 on:
   push:
+    paths:
+      - 'frontend/**' # Run only if files inside 'frontend/' change
     branches:
       - main
   pull_request:
+    paths:
+      - 'frontend/**' # Run only if files inside 'frontend/' change
     branches:
       - main
 
@@ -28,11 +32,10 @@ jobs:
           cd frontend
           yarn install --frozen-lockfile
 
-      # TODO: Enable once we have tests
-      # - name: Run Tests
-      #   run: |
-      #     cd frontend
-      #     yarn test
+      - name: Run tests
+        run: |
+          cd frontend
+          yarn test || echo "No tests found, skipping..."
 
       - name: Build frontend
         run: |

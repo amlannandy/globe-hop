@@ -15,7 +15,8 @@ Globe Hop is a full-stack travel itinerary management platform designed to help 
 ## Getting Started
 ### Prerequisites
 Ensure you have the following installed:
-- Golang (v1.18+)
+- Golang
+- Node.js
 - PostgreSQL
 
 ### Installation
@@ -33,11 +34,7 @@ Ensure you have the following installed:
    ```env
    DATABASE_URL=postgres://username:password@localhost:5432/globe_hop
    ```
-4. Run database migrations:
-   ```bash
-   go run migrate.go
-   ```
-5. Start the server:
+4. Start the server:
    ```bash
    go run main.go
    ```

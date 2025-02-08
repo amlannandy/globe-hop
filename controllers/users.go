@@ -7,7 +7,6 @@ import (
 	"globe-hop/types"
 	"globe-hop/utils"
 	"net/http"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"golang.org/x/crypto/bcrypt"
@@ -144,39 +143,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 // GetCurrentUser retrieves the current user based on the JWT token provided in the request header.
 func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
-	// Extract the Authorization header from the request
-	authHeader := r.Header.Get("Authorization")
-
-	// Split the header to get the token part
-	token := strings.Split(authHeader, " ")[1]
-
-	// Decode token and fetch user ID
-	userId, err := config.DecodeJWTToken(token)
-	if err != nil {
-		// Send error response if the token is invalid
-		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
-			Status: http.StatusUnauthorized,
-			Error:  "Invalid token.",
-		})
-		return
-	}
-
-	// Retrieve the user from the database using the extracted user ID
-	var user *models.User
-	err = config.DB.Where("id = ?", userId).First(&user).Error
-	if err != nil {
-		// Send error response if the user is not found
-		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
-			Status: http.StatusNotFound,
-			Error:  "User not found.",
-		})
-		return
-	}
 
 	// Send success response with the current user data
 	utils.SendSuccessResponse(w, &utils.SuccessResponseBody{
 		Status:  http.StatusAccepted,
 		Message: "Current user retrieved.",
-		Data:    *user,
+		Data:    r.Context().Value("user"),
 	})
 }

@@ -176,7 +176,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete user from database
-	err := config.DB.Delete(user).Error
+	err := config.DB.Unscoped().Delete(user).Error
 	if err != nil {
 		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
 			Status: http.StatusInternalServerError,
@@ -189,5 +189,75 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	utils.SendSuccessResponse(w, &utils.SuccessResponseBody{
 		Status:  http.StatusOK,
 		Message: "User deleted successfully.",
+	})
+}
+
+// UpdatePassword updates the password of the current user.
+func UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	user := r.Context().Value("user").(*models.User)
+
+	// Get password from request body
+	var body types.UpdatePasswordRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusBadRequest,
+			Error:  "Invalid request body",
+		})
+		return
+	}
+
+	// Validate body
+	err := validate.Struct(body)
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusBadRequest,
+			Error:  config.FormatValidationError(err),
+		})
+		return
+	}
+
+	// Verify old password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.OldPassword)); err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusUnauthorized,
+			Error:  "Incorrect old password",
+		})
+		return
+	}
+
+	// Check if old and new passwords are same
+	if body.OldPassword == body.NewPassword {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusBadRequest,
+			Error:  "New password must be different from old password",
+		})
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusInternalServerError,
+			Error:  "Error updating password",
+		})
+		return
+	}
+
+	// Update user password
+	user.Password = string(hashedPassword)
+	err = config.DB.Save(user).Error
+	if err != nil {
+		utils.SendErrorResponse(w, &utils.ErrorResponseBody{
+			Status: http.StatusInternalServerError,
+			Error:  "Error updating password",
+		})
+		return
+	}
+
+	// Return success response
+	utils.SendSuccessResponse(w, &utils.SuccessResponseBody{
+		Status:  http.StatusOK,
+		Message: "Password updated successfully.",
 	})
 }

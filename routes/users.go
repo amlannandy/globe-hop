@@ -12,4 +12,5 @@ func InitializeUsersRoutes(r *mux.Router) {
 	r.HandleFunc("/users/register", controllers.Register).Methods("POST")
 	r.HandleFunc("/users/current", middleware.AuthMiddleware(controllers.GetCurrentUser)).Methods("GET")
 	r.HandleFunc("/users/delete", middleware.AuthMiddleware(controllers.DeleteUser)).Methods("DELETE")
+	r.HandleFunc("/users/update-password", middleware.AuthMiddleware(controllers.UpdatePassword)).Methods("PUT")
 }
